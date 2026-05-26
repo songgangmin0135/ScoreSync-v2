@@ -563,7 +563,16 @@ export default function App() {
                   <div className={`score-renderer-wrapper render-pos-${scorePosition}`} style={{ gap: `${lineGap / 2}px` }}>
                     {activeScene && activeScene.cuts.map((cut, i) => (
                       <div key={cut.id} style={{ width: '100%', transform: `scale(${imageScale / 100})` }}>
-                        <MockScoreImage number={cut.imgNum || cut.id} scale={imageScale / 100} />
+                        {cut.isMock ? (
+                          <MockScoreImage number={cut.imgNum || cut.id} scale={imageScale / 100} />
+                        ) : (
+                          <img 
+                            src={cut.img.startsWith('http') ? cut.img : `${backendUrl}${cut.img}`} 
+                            className="preview-slice-image" 
+                            style={{ width: '90%', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}
+                            alt={`slice-${cut.id}`}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -731,7 +740,16 @@ export default function App() {
                             </span>
                             
                             <div className="line-thumbnail-wrapper">
-                              <MockScoreImage number={cut.imgNum || cut.id} scale={0.4} />
+                              {cut.isMock ? (
+                                <MockScoreImage number={cut.imgNum || cut.id} scale={0.4} />
+                              ) : (
+                                <img 
+                                  src={cut.img.startsWith('http') ? cut.img : `${backendUrl}${cut.img}`} 
+                                  className="line-thumbnail" 
+                                  style={{ maxWidth: '95%', maxHeight: '95%', objectFit: 'contain' }}
+                                  alt={`thumb-${cut.id}`}
+                                />
+                              )}
                             </div>
 
                             <button 
