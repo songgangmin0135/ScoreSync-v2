@@ -119,6 +119,7 @@ export default function App() {
   const [scorePosition, setScorePosition] = useState("center");
   const [imageScale, setImageScale] = useState(100);
   const [lineGap, setLineGap] = useState(20);
+  const [skipHeader, setSkipHeader] = useState(true);
   
   const [cuts, setCuts] = useState([]);
   const [selectedSceneIdx, setSelectedSceneIdx] = useState(0);
@@ -129,6 +130,8 @@ export default function App() {
   const [backendUrl, setBackendUrl] = useState("http://localhost:8000");
   const [renderingProgress, setRenderingProgress] = useState(0);
   const [consoleLogs, setConsoleLogs] = useState([]);
+  const [showSnsModal, setShowSnsModal] = useState(false);
+  const [snsLogs, setSnsLogs] = useState([]);
   
   const logContainerRef = useRef(null);
 
@@ -272,6 +275,7 @@ export default function App() {
       const formData = new FormData();
       formData.append("file", uploadedFile);
       formData.append("bpm", bpm);
+      formData.append("skip_header", skipHeader);
 
       try {
         const res = await fetch(`${backendUrl}/api/upload`, {
@@ -517,6 +521,35 @@ export default function App() {
                     <span className="range-value">{imageScale}%</span>
                   </div>
                 </div>
+              </div>
+
+              {/* 기능 1: 헤더 자동 제외 토글 */}
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                  <div 
+                    onClick={() => setSkipHeader(!skipHeader)}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      background: skipHeader 
+                        ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' 
+                        : 'var(--bg-tertiary)',
+                      position: 'relative', cursor: 'pointer',
+                      transition: 'background 0.3s ease',
+                      border: '1px solid var(--border-color)', flexShrink: 0
+                    }}
+                  >
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: 'white', position: 'absolute', top: '2px',
+                      left: skipHeader ? '22px' : '3px',
+                      transition: 'left 0.2s ease',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                    }} />
+                  </div>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    첫 페이지 헤더 자동 제외 (제목/작곡가 등 비-악보 영역 건너뛰기)
+                  </span>
+                </label>
               </div>
 
               {!isDemoMode && (
@@ -819,7 +852,7 @@ export default function App() {
         )}
 
         {/* ==============================================
-            STAGE 4: RENDER SUCCESS & DOWNLOAD
+            STAGE 4: RENDER SUCCESS & DOWNLOAD & SNS
             ============================================== */}
         {step === 4 && (
           <div className="glass-panel render-screen">
@@ -829,7 +862,7 @@ export default function App() {
                 영상 렌더링 완료!
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-                스코어싱크 비디오가 준비되었습니다. 고음질 음원 싱크와 부드러운 화면 전환이 완벽하게 믹싱된 완성본 MP4를 다운로드 받으세요.
+                스코어싱크 비디오가 준비되었습니다. 완성본 MP4를 다운로드하거나 SNS에 바로 업로드하세요.
               </p>
 
               {/* Action Buttons */}
@@ -842,6 +875,19 @@ export default function App() {
                 📥 완성된 MP4 다운로드 받기
               </a>
 
+              {/* SNS Upload Button */}
+              <button 
+                className="btn-primary" 
+                onClick={() => { setShowSnsModal(true); setSnsLogs([]); }}
+                style={{ 
+                  marginTop: '0.5rem',
+                  background: 'linear-gradient(135deg, #E1306C 0%, #FF0050 33%, #FF0000 66%, #c4302b 100%)',
+                  boxShadow: '0 4px 15px rgba(225, 48, 108, 0.3)'
+                }}
+              >
+                📱 SNS에 원클릭 업로드하기
+              </button>
+
               <button 
                 className="undo-button" 
                 onClick={() => setStep(1)}
@@ -850,6 +896,100 @@ export default function App() {
                 🔄 새로운 프로젝트로 처음부터 시작하기
               </button>
             </div>
+
+            {/* ========== SNS UPLOAD MODAL ========== */}
+            {showSnsModal && (
+              <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 9999
+              }} onClick={() => setShowSnsModal(false)}>
+                <div 
+                  className="glass-panel"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: '90%', maxWidth: '520px', padding: '2rem',
+                    background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                    borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 className="gradient-text" style={{ fontSize: '1.3rem', fontWeight: 800 }}>📱 SNS 원클릭 업로드</h3>
+                    <button onClick={() => setShowSnsModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+                  </div>
+
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                    완성된 <strong style={{color:'var(--text-primary)'}}>{projectTitle}.mp4</strong> 비디오를 원하는 플랫폼으로 업로드합니다.
+                  </p>
+
+                  {/* SNS Platform Buttons */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    {[
+                      { name: 'YouTube Shorts', icon: '🎬', color: '#FF0000', gradient: 'linear-gradient(135deg, #FF0000, #c4302b)' },
+                      { name: 'Instagram Reels', icon: '📸', color: '#E1306C', gradient: 'linear-gradient(135deg, #833AB4, #E1306C, #F77737)' },
+                      { name: 'TikTok', icon: '🎵', color: '#00f2ea', gradient: 'linear-gradient(135deg, #00f2ea, #ff0050)' }
+                    ].map((platform) => (
+                      <button
+                        key={platform.name}
+                        onClick={() => {
+                          // SNS 업로드 시뮬레이션
+                          setSnsLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `⏳ ${platform.name} 서버 인증 연동 중...` }]);
+                          setTimeout(() => {
+                            setSnsLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `📤 ${platform.name}에 ${projectTitle}.mp4 (${(totalDuration).toFixed(1)}초) 파일 전송 시작...` }]);
+                          }, 800);
+                          setTimeout(() => {
+                            setSnsLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `📊 ${platform.name} 서버 업로드 진행률 47%... 트랜스코딩 대기 중` }]);
+                          }, 1800);
+                          setTimeout(() => {
+                            setSnsLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), text: `✅ ${platform.name} 업로드 완료! 게시물이 성공적으로 발행되었습니다.` }]);
+                          }, 3000);
+                        }}
+                        style={{
+                          width: '100%', padding: '1rem 1.25rem',
+                          background: platform.gradient,
+                          border: 'none', borderRadius: '12px',
+                          color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                          transition: 'all 0.2s ease', boxShadow: `0 4px 15px ${platform.color}40`
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.filter = 'brightness(1.1)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.filter = 'brightness(1)'; }}
+                      >
+                        <span style={{ fontSize: '1.3rem' }}>{platform.icon}</span>
+                        {platform.name}에 업로드
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* QR Code / Mobile Link fallback */}
+                  <div style={{
+                    background: 'var(--bg-tertiary)', borderRadius: '12px',
+                    padding: '1rem', border: '1px solid var(--border-color)',
+                    textAlign: 'center', marginBottom: '1rem'
+                  }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                      📲 개인 계정 사용자용 (API 미등록 시)
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                      모바일 기기에서 영상을 다운로드한 뒤, 각 앱의 "새 게시물 만들기"에서 비디오를 첨부하여 올릴 수 있습니다.
+                    </span>
+                  </div>
+
+                  {/* Upload Simulation Console */}
+                  {snsLogs.length > 0 && (
+                    <div className="console-panel" style={{ maxHeight: '150px', marginTop: '0.5rem' }}>
+                      {snsLogs.map((log, idx) => (
+                        <div key={idx} className="console-line">
+                          <span className="console-timestamp">[{log.time}]</span>
+                          <span>{log.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

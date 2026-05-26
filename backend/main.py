@@ -54,7 +54,8 @@ class RenderRequest(BaseModel):
 @app.post("/api/upload")
 async def upload_pdf(
     file: UploadFile = File(...),
-    bpm: int = Form(120)
+    bpm: int = Form(120),
+    skip_header: bool = Form(True)
 ):
     """
     Receives sheet music PDF, slices it into line-by-line images using OpenCV,
@@ -74,7 +75,7 @@ async def upload_pdf(
         
         # Read the file again for the PDF engine
         with open(temp_pdf_path, "rb") as f:
-            sliced_paths = engine.slice_pdf_to_lines(f)
+            sliced_paths = engine.slice_pdf_to_lines(f, skip_header=skip_header)
             
         # Formulate cuts for React with absolute backend static URLs
         cuts = []
